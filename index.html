@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Travel Planner ✈️</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+    html, body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(165, 180, 252, 0.35) 0%, transparent 45%),
+        radial-gradient(circle at 85% 20%, rgba(196, 181, 253, 0.30) 0%, transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(147, 197, 253, 0.30) 0%, transparent 50%),
+        linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f5f3ff 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      color: #0f172a;
+    }
+
+    .font-display { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; letter-spacing: -0.02em; }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #2563eb 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+    }
+
+    .glass-strong {
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .decor-dots {
+      background-image: radial-gradient(rgba(99, 102, 241, 0.25) 1.5px, transparent 1.5px);
+      background-size: 18px 18px;
+    }
+
+    /* Inputs */
+    input[type="text"], input[type="date"] {
+      transition: all 0.3s var(--ease-out-quart);
+      font-size: 1rem;
+      color: #0f172a;
+    }
+    input[type="text"]:focus, input[type="date"]:focus {
+      outline: none;
+      border-color: #6366f1 !important;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+      background: white !important;
+    }
+    input[type="text"]::placeholder { color: #94a3b8; }
+    .input-error { border-color: #ef4444 !important; background: rgba(254, 226, 226, 0.4) !important; }
+
+    /* Suggestion pills */
+    .suggestion-pill {
+      transition: all 0.25s var(--ease-out-quart);
+      cursor: pointer;
+    }
+    .suggestion-pill:hover {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white !important;
+      border-color: transparent !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -8px rgba(99, 102, 241, 0.6);
+    }
+
+    /* Buttons */
+    .btn-shine {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s var(--ease-out-quart);
+    }
+    .btn-shine:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.55);
+    }
+    .btn-shine::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transition: left 0.6s;
+    }
+    .btn-shine:hover::before { left: 100%; }
+
+    /* Cards */
+    .card-hover { transition: all 0.4s var(--ease-out-quart); }
+    .card-hover:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 25px 50px -15px rgba(15, 23, 42, 0.18);
+    }
+
+    /* Decorative visual headers */
+    .visual-header {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .visual-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.25) 0%, transparent 35%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.18) 0%, transparent 40%);
+    }
+    .visual-header .emoji {
+      position: relative;
+      z-index: 1;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+      transition: transform 0.6s var(--ease-out-quart);
+    }
+    .card-hover:hover .visual-header .emoji {
+      transform: scale(1.15) rotate(-3deg);
+    }
+
+    /* Smart image */
+    .smart-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.6s var(--ease-out-quart), transform 0.6s var(--ease-out-quart);
+      z-index: 2;
+    }
+    .smart-img.loaded { opacity: 1; }
+    .card-hover:hover .smart-img.loaded { transform: scale(1.05); }
+
+    .img-shimmer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.35) 50%, transparent 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s linear infinite;
+    }
+    @keyframes shimmer {
+      from { background-position: 200% 0; }
+      to   { background-position: -200% 0; }
+    }
+
+    /* Distinct gradient palettes for variety */
+    .gradient-1 { background: linear-gradient(135deg, #fde68a 0%, #fb923c 50%, #f43f5e 100%); }
+    .gradient-2 { background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 50%, #6366f1 100%); }
+    .gradient-3 { background: linear-gradient(135deg, #6ee7b7 0%, #34d399 50%, #059669 100%); }
+    .gradient-4 { background: linear-gradient(135deg, #fbcfe8 0%, #f472b6 50%, #db2777 100%); }
+    .gradient-5 { background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #2563eb 100%); }
+    .gradient-6 { background: linear-gradient(135deg, #ddd6fe 0%, #a78bfa 50%, #7c3aed 100%); }
+    .gradient-7 { background: linear-gradient(135deg, #fef08a 0%, #facc15 50%, #ca8a04 100%); }
+    .gradient-8 { background: linear-gradient(135deg, #fca5a5 0%, #ef4444 50%, #b91c1c 100%); }
+
+    .aspect-video { aspect-ratio: 16 / 9; }
+
+    .hotel-image-area {
+      min-height: 240px;
+    }
+    @media (min-width: 640px) {
+      .hotel-image-area { min-height: 100%; }
+    }
+
+    .hero-min-height { min-height: 380px; }
+    @media (min-width: 768px) {
+      .hero-min-height { min-height: 480px; }
+    }
+
+    .star-rating { color: #f59e0b; letter-spacing: 1px; }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5), 0 10px 25px -5px rgba(99, 102, 241, 0.4); }
+      50% { box-shadow: 0 0 0 12px rgba(99, 102, 241, 0), 0 15px 30px -5px rgba(99, 102, 241, 0.5); }
+    }
+    @keyframes glowRing {
+      0%, 100% { box-shadow: 0 0 30px -5px rgba(99, 102, 241, 0.3); }
+      50% { box-shadow: 0 0 40px -2px rgba(139, 92, 246, 0.4); }
+    }
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .animate-fade-in { animation: fadeIn 0.6s var(--ease-out-quart) both; }
+    .animate-fade-in-up { animation: fadeInUp 0.7s var(--ease-out-expo) both; }
+    .animate-fade-in-scale { animation: fadeInScale 0.6s var(--ease-out-expo) both; }
+    .animate-float { animation: float 3.5s ease-in-out infinite; }
+    .animate-spin-slow { animation: spinSlow 25s linear infinite; }
+    .animate-shake { animation: shake 0.4s ease-in-out; }
+    .animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+    .animate-glow-ring { animation: glowRing 3s ease-in-out infinite; }
+
+    .animated-gradient {
+      background-size: 200% 200%;
+      animation: gradientShift 12s ease infinite;
+    }
+
+    /* Step scroller */
+    .step-scroller {
+      height: 360px;
+      position: relative;
+    }
+    .step-row {
+      height: 120px;
+      display: flex;
+      align-items: center;
+    }
+    .step-fade-top {
+      height: 100px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,255,255,0));
+    }
+    .step-fade-bottom {
+      height: 100px;
+      background: linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0));
+    }
+
+    .step-spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spinSlow 0.8s linear infinite;
+    }
+
+    /* Horizontal scroll for daily forecast */
+    .scroll-x::-webkit-scrollbar { height: 6px; }
+    .scroll-x::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    .scroll-x::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 3px; }
+    .scroll-x::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.6); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+    const API_URL = "/plan";
+
+    async function fetchPlan(location, startDate, endDate) {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ location, startDate, endDate }),
+      });
+      let payload = null;
+      try { payload = await response.json(); } catch (_) {}
+      if (!response.ok) {
+        if (payload && payload.fieldErrors) {
+          const err = new Error('Validation failed');
+          err.fieldErrors = payload.fieldErrors;
+          throw err;
+        }
+        throw new Error((payload && payload.error) || `Server returned ${response.status}`);
+      }
+      return payload;
+    }
+
+    /* ----- Wikipedia image fetcher ---------------------------------------
+       Uses the MediaWiki API (CORS-friendly with origin=*).
+       Returns a URL string or null if no image is found.
+    ----------------------------------------------------------------------*/
+    const wikiImageCache = new Map();
+
+    async function fetchWikipediaImage(title) {
+      if (!title) return null;
+      const key = title.trim();
+      if (wikiImageCache.has(key)) return wikiImageCache.get(key);
+
+      const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages&piprop=original%7Cthumbnail&pithumbsize=1200&redirects=1&titles=${encodeURIComponent(key)}&origin=*`;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Wikipedia returned ${res.status}`);
+        const data = await res.json();
+        const pages = data?.query?.pages || {};
+        const pageList = Object.values(pages);
+        let imageUrl = null;
+        for (const page of pageList) {
+          if (page.original?.source) { imageUrl = page.original.source; break; }
+          if (page.thumbnail?.source) { imageUrl = page.thumbnail.source; break; }
+        }
+        wikiImageCache.set(key, imageUrl);
+        return imageUrl;
+      } catch (err) {
+        wikiImageCache.set(key, null);
+        return null;
+      }
+    }
+
+    /* ----- Pick a deterministic emoji + gradient for each card ----- */
+    const ATTRACTION_EMOJI = {
+      Landmark: '🗼',
+      Museum: '🏛️',
+      Historic: '🏯',
+      Nature: '🌳',
+      Cultural: '🎭',
+      'Theme Park': '🎢',
+      Zoo: '🦁',
+    };
+
+    function hashString(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) h = ((h << 5) - h) + str.charCodeAt(i) | 0;
+      return Math.abs(h);
+    }
+
+    function gradientClassFor(seed) {
+      return `gradient-${(hashString(seed) % 8) + 1}`;
+    }
+
+    /* ----- SmartImage: tries Wikipedia, falls back to gradient + emoji ----- */
+    function SmartImage({ wikiTitle, fallbackEmoji, seed, className = '', emojiSize = 'text-7xl' }) {
+      const [url, setUrl] = useState(null);
+      const [loaded, setLoaded] = useState(false);
+      const [failed, setFailed] = useState(false);
+      const gradient = gradientClassFor(seed || wikiTitle || fallbackEmoji || 'x');
+
+      useEffect(() => {
+        let cancelled = false;
+        setUrl(null);
+        setLoaded(false);
+        setFailed(false);
+
+        if (!wikiTitle) { setFailed(true); return; }
+
+        fetchWikipediaImage(wikiTitle).then(u => {
+          if (cancelled) return;
+          if (u) setUrl(u);
+          else setFailed(true);
+        });
+
+        return () => { cancelled = true; };
+      }, [wikiTitle]);
+
+      const showImage = url && !failed;
+
+      return (
+        <div className={`visual-header ${gradient} ${className}`}>
+          {/* Emoji fallback - always present underneath; fades out when the image loads */}
+          <div
+            className={`emoji ${emojiSize}`}
+            style={{ opacity: loaded && showImage ? 0 : 1, transition: 'opacity 0.4s' }}
+          >
+            {fallbackEmoji}
+          </div>
+
+          {showImage && !loaded && <div className="img-shimmer" />}
+
+          {showImage && (
+            <img
+              src={url}
+              alt={wikiTitle}
+              className={`smart-img ${loaded ? 'loaded' : ''}`}
+              onLoad={() => setLoaded(true)}
+              onError={() => setFailed(true)}
+            />
+          )}
+        </div>
+      );
+    }
+
+    /* ----- StepScroller: scrolls the active step into the center of a fixed window ----- */
+    function StepScroller({ steps, currentIndex }) {
+      const translateY = 120 - currentIndex * 120;
+
+      return (
+        <div className="step-scroller relative overflow-hidden w-full max-w-2xl mx-auto">
+          <div className="step-fade-top absolute inset-x-0 top-0 z-20 pointer-events-none" />
+          <div className="step-fade-bottom absolute inset-x-0 bottom-0 z-20 pointer-events-none" />
+
+          <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 z-0 pointer-events-none step-row">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 border border-indigo-100 animate-glow-ring"></div>
+          </div>
+
+          <div
+            className="relative z-10"
+            style={{
+              transform: `translateY(${translateY}px)`,
+              transition: 'transform 0.95s var(--ease-out-expo)',
+            }}
+          >
+            {steps.map((step, i) => {
+              const isActive = i === currentIndex;
+              const isDone = i < currentIndex;
+              const distance = Math.abs(i - currentIndex);
+              let opacity = 1;
+              let scale = 1;
+              if (distance === 1) { opacity = 0.35; scale = 0.92; }
+              else if (distance >= 2) { opacity = 0.12; scale = 0.85; }
+
+              return (
+                <div
+                  key={i}
+                  className="step-row flex items-center gap-5 px-5"
+                  style={{
+                    opacity,
+                    transform: `scale(${scale})`,
+                    transition: 'opacity 0.85s var(--ease-out-expo), transform 0.85s var(--ease-out-expo)',
+                  }}
+                >
+                  <div className="flex-shrink-0">
+                    {isActive ? (
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-blue-500 flex items-center justify-center animate-pulse-glow">
+                        <div className="step-spinner"></div>
+                      </div>
+                    ) : isDone ? (
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-3xl shadow-lg">
+                        ✓
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-slate-400 font-bold text-xl border-2 border-slate-200">
+                        {i + 1}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className="font-display font-extrabold leading-tight"
+                      style={{
+                        fontSize: isActive ? '1.75rem' : '1.125rem',
+                        color: isActive ? '#1e293b' : '#475569',
+                        transition: 'font-size 0.6s var(--ease-out-expo), color 0.6s ease',
+                      }}
+                    >
+                      {step.title}
+                    </div>
+                    <div
+                      className="text-slate-500 mt-1"
+                      style={{
+                        fontSize: isActive ? '0.95rem' : '0.8rem',
+                        transition: 'font-size 0.6s var(--ease-out-expo)',
+                      }}
+                    >
+                      {step.subtitle}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    /* ----- Main component ----- */
+    function TravelPlanner() {
+      const [location, setLocation]   = useState('');
+      const [startDate, setStartDate] = useState('');
+      const [endDate, setEndDate]     = useState('');
+      const [results, setResults]     = useState(null);
+      const [loading, setLoading]     = useState(false);
+      const [errors, setErrors]       = useState({});
+      const [stepIndex, setStepIndex] = useState(0);
+      const [apiError, setApiError]   = useState(null);
+      const resultsRef = useRef(null);
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const popular = ['Paris', 'Tokyo', 'Reykjavik', 'Cape Town', 'Kyoto', 'Buenos Aires', 'Marrakech', 'Queenstown'];
+
+      const loadingSteps = [
+        { title: 'Connecting',              subtitle: 'Establishing a secure link to the travel service' },
+        { title: 'Researching destination', subtitle: 'Gathering data about your chosen location' },
+        { title: 'Curating attractions',    subtitle: 'Finding must-see places and hidden gems' },
+        { title: 'Selecting hotels',        subtitle: 'Choosing accommodations across all budgets' },
+        { title: 'Checking the weather',    subtitle: 'Analysing forecasts for your travel dates' },
+        { title: 'Finalising your plan',    subtitle: 'Putting all the pieces together' },
+      ];
+
+      const handleSearch = async () => {
+        setErrors({}); setApiError(null); setResults(null);
+
+        const localErrors = {};
+        if (!location.trim()) localErrors.location = 'Please enter a destination';
+        if (!startDate) localErrors.startDate = 'Start date is required';
+        if (!endDate)   localErrors.endDate   = 'End date is required';
+        if (startDate && endDate && new Date(endDate) <= new Date(startDate)) {
+          localErrors.endDate = 'End date must be after start date';
+        }
+        if (Object.keys(localErrors).length > 0) { setErrors(localErrors); return; }
+
+        setLoading(true); setStepIndex(0);
+        const interval = setInterval(() => {
+          setStepIndex(i => Math.min(i + 1, loadingSteps.length - 2));
+        }, 1800);
+
+        try {
+          const data = await fetchPlan(location.trim(), startDate, endDate);
+          clearInterval(interval);
+          setStepIndex(loadingSteps.length - 1);
+          await new Promise(r => setTimeout(r, 600));
+          setResults(data);
+          setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+        } catch (err) {
+          clearInterval(interval);
+          if (err.fieldErrors) {
+            setErrors(err.fieldErrors);
+          } else {
+            const msg = err && err.message ? err.message : String(err);
+            const isNetwork = /Failed to fetch|NetworkError|TypeError/i.test(msg);
+            setApiError(isNetwork
+              ? "Couldn't reach the backend. Make sure server.py is running on port 5000."
+              : msg);
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const pickCity = (c) => {
+        setLocation(c);
+        setErrors(e => ({ ...e, location: undefined }));
+      };
+
+      const resetForm = () => {
+        setResults(null); setApiError(null); setErrors({});
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const renderStars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
+
+      return (
+        <div className="min-h-screen p-4 md:p-6 lg:p-10 relative">
+          <div className="hidden md:block absolute top-12 left-8 w-32 h-32 decor-dots opacity-60 pointer-events-none rounded-full"></div>
+          <div className="hidden md:block absolute top-32 right-12 w-40 h-40 decor-dots opacity-50 pointer-events-none rounded-full"></div>
+
+          <div className="max-w-7xl mx-auto relative">
+
+            {/* Header */}
+            <div className="text-center mb-10 pt-2 animate-fade-in-up">
+              <div className="inline-block animate-float mb-5 text-7xl drop-shadow-lg">✈️</div>
+              <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-extrabold gradient-text mb-3 leading-none">
+                Travel Planner
+              </h1>
+              <p className="text-slate-500 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                Discover destinations, hotels, and weather forecasts anywhere in the world
+              </p>
+            </div>
+
+            {/* Search form */}
+            <div className="glass rounded-3xl shadow-2xl p-6 md:p-10 mb-8 animate-fade-in-scale" style={{ animationDelay: '0.15s' }}>
+              <div className="grid md:grid-cols-3 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2 ml-1 tracking-widest">DESTINATION</label>
+                  <input
+                    type="text"
+                    placeholder="Anywhere in the world..."
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className={`w-full p-4 rounded-xl border-2 border-slate-200 bg-white/85 ${errors.location ? 'input-error animate-shake' : ''}`}
+                  />
+                  {errors.location && <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">{errors.location}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2 ml-1 tracking-widest">CHECK IN</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    min={todayStr}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className={`w-full p-4 rounded-xl border-2 border-slate-200 bg-white/85 ${errors.startDate ? 'input-error animate-shake' : ''}`}
+                  />
+                  {errors.startDate && <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">{errors.startDate}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2 ml-1 tracking-widest">CHECK OUT</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    min={startDate || todayStr}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className={`w-full p-4 rounded-xl border-2 border-slate-200 bg-white/85 ${errors.endDate ? 'input-error animate-shake' : ''}`}
+                  />
+                  {errors.endDate && <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">{errors.endDate}</p>}
+                </div>
+              </div>
+
+              {!results && !loading && (
+                <div className="mt-6 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="text-slate-400 font-bold tracking-widest">TRY:</span>
+                  {popular.map((c, i) => (
+                    <button
+                      key={c}
+                      onClick={() => pickCity(c)}
+                      className="suggestion-pill bg-white text-slate-600 border border-slate-200 px-4 py-2 rounded-full font-medium animate-fade-in"
+                      style={{ animationDelay: `${0.3 + i * 0.05}s` }}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <button
+                onClick={handleSearch}
+                disabled={loading}
+                className="btn-shine w-full mt-7 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white font-bold py-4 rounded-xl shadow-xl text-lg disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Planning your trip...' : '✨ Plan My Trip'}
+              </button>
+            </div>
+
+            {/* Scrolling Loading Steps */}
+            {loading && (
+              <div className="glass-strong rounded-3xl p-6 md:p-10 shadow-xl mb-6 animate-fade-in-scale overflow-hidden">
+                <div className="text-center mb-2">
+                  <div className="text-xs font-bold tracking-widest text-indigo-600 uppercase">Building your itinerary</div>
+                  <div className="text-2xl md:text-3xl font-display font-extrabold text-slate-800 mt-1">
+                    One moment please...
+                  </div>
+                </div>
+                <StepScroller steps={loadingSteps} currentIndex={stepIndex} />
+                <div className="mt-2 max-w-2xl mx-auto px-5">
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 rounded-full"
+                      style={{
+                        width: `${((stepIndex + 1) / loadingSteps.length) * 100}%`,
+                        transition: 'width 0.95s var(--ease-out-expo)',
+                      }}
+                    ></div>
+                  </div>
+                  <div className="text-xs text-slate-400 mt-2 text-right font-medium">
+                    Step {stepIndex + 1} of {loadingSteps.length}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* API error */}
+            {apiError && !loading && (
+              <div className="glass-strong border-2 border-red-200 rounded-3xl p-6 mb-6 animate-fade-in-scale" style={{ background: 'rgba(254, 226, 226, 0.7)' }}>
+                <div className="flex items-start gap-4">
+                  <div className="text-3xl flex-shrink-0">⚠️</div>
+                  <div>
+                    <h3 className="font-bold text-red-800 mb-1">Something went wrong</h3>
+                    <p className="text-sm text-red-700">{apiError}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Results */}
+            {results && !loading && (
+              <div ref={resultsRef} className="space-y-8">
+
+                {/* Hero */}
+                <div className="relative rounded-3xl overflow-hidden shadow-2xl hero-min-height animate-fade-in-up">
+                  <SmartImage
+                    wikiTitle={results.wiki_title || results.city}
+                    fallbackEmoji="🌍"
+                    seed={results.city}
+                    className="absolute inset-0 w-full h-full"
+                    emojiSize="text-9xl"
+                  />
+                  {/* Dark overlay for legibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10"></div>
+
+                  <div className="absolute -top-10 -right-10 text-9xl opacity-15 animate-spin-slow z-10">🌍</div>
+                  <div className="absolute top-20 right-32 text-6xl opacity-25 animate-float z-10">✈️</div>
+                  <div className="relative z-20 p-7 md:p-14 text-white hero-min-height flex flex-col justify-end">
+                    <div className="text-xs font-bold uppercase tracking-widest opacity-90 mb-3 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                      📍 Your Destination
+                    </div>
+                    <h2 className="font-display text-5xl md:text-8xl font-black mb-4 drop-shadow-2xl animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+                      {results.city}
+                    </h2>
+                    {results.coords && (
+                      <p className="text-white/90 text-base md:text-lg animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
+                        {Number(results.coords.lat).toFixed(2)}°, {Number(results.coords.lon).toFixed(2)}°
+                        <span className="mx-3 opacity-50">·</span>
+                        {startDate} → {endDate}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Attractions */}
+                {Array.isArray(results.attractions) && results.attractions.length > 0 && (
+                  <div className="glass-strong rounded-3xl p-6 md:p-10 shadow-xl animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                    <h3 className="font-display text-3xl md:text-4xl font-extrabold text-slate-800 mb-1">🗺️ Top Places to Visit</h3>
+                    <p className="text-slate-500 mb-6">Curated highlights from your destination</p>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {results.attractions.map((p, i) => (
+                        <div
+                          key={i}
+                          className="attraction-card card-hover bg-white rounded-2xl overflow-hidden border border-slate-100 animate-fade-in-up"
+                          style={{ animationDelay: `${0.3 + i * 0.08}s` }}
+                        >
+                          <div className="relative">
+                            <SmartImage
+                              wikiTitle={p.wiki_title}
+                              fallbackEmoji={ATTRACTION_EMOJI[p.type] || '🏛️'}
+                              seed={p.name + (p.type || '')}
+                              className="aspect-video"
+                              emojiSize="text-7xl"
+                            />
+                            <span className="absolute top-3 left-3 text-xs font-bold bg-white/90 backdrop-blur text-indigo-700 px-2.5 py-1 rounded-full tracking-wide shadow-md z-10">
+                              {p.type || 'Attraction'}
+                            </span>
+                          </div>
+                          <div className="p-5">
+                            <h4 className="font-display font-bold text-lg text-slate-800 mb-1.5 leading-tight">{p.name}</h4>
+                            <p className="text-sm text-slate-500 leading-relaxed">{p.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Hotels */}
+                {Array.isArray(results.hotels) && results.hotels.length > 0 && (
+                  <div className="glass-strong rounded-3xl p-6 md:p-10 shadow-xl animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                    <h3 className="font-display text-3xl md:text-4xl font-extrabold text-slate-800 mb-1">🏨 Recommended Hotels</h3>
+                    <p className="text-slate-500 mb-6">Picks across budget, mid-range, and luxury</p>
+                    <div className="grid lg:grid-cols-2 gap-6">
+                      {results.hotels.map((h, i) => (
+                        <div
+                          key={i}
+                          className="hotel-card card-hover bg-white rounded-2xl overflow-hidden border border-slate-100 flex flex-col sm:flex-row animate-fade-in-up"
+                          style={{ animationDelay: `${0.4 + i * 0.08}s` }}
+                        >
+                          <div className="sm:w-2/5 relative overflow-hidden hotel-image-area flex-shrink-0">
+                            <SmartImage
+                              wikiTitle={h.wiki_title}
+                              fallbackEmoji="🏨"
+                              seed={h.name}
+                              className="w-full h-full min-h-[240px]"
+                              emojiSize="text-8xl"
+                            />
+                            <div className="absolute top-3 left-3 star-rating text-xs font-bold bg-white/90 backdrop-blur px-2.5 py-1 rounded-full shadow-md z-10">
+                              {renderStars(h.stars || 3)}
+                            </div>
+                          </div>
+                          <div className="flex-1 p-5 flex flex-col">
+                            <h4 className="font-display font-bold text-xl text-slate-800 mb-2 leading-tight">{h.name}</h4>
+                            <div className="flex flex-wrap gap-1.5 mb-4">
+                              {(h.features || []).map((f, j) => (
+                                <span key={j} className="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-medium">{f}</span>
+                              ))}
+                            </div>
+                            <div className="mt-auto flex items-end justify-between pt-3 border-t border-slate-100">
+                              <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">From</div>
+                              <div className="text-right">
+                                <div className="text-3xl font-extrabold gradient-text leading-none">${h.price}</div>
+                                <div className="text-xs text-slate-400 font-medium uppercase tracking-wider mt-1">per night</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Weather */}
+                {results.weather && (
+                  <div className="rounded-3xl p-6 md:p-12 shadow-2xl text-white relative overflow-hidden animate-fade-in-up bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700" style={{ animationDelay: '0.4s' }}>
+                    <div className="absolute -top-16 -right-16 text-9xl opacity-15 animate-float">☁️</div>
+                    <div className="absolute -bottom-10 -left-10 text-8xl opacity-10 animate-spin-slow">❄️</div>
+
+                    <div className="relative z-10">
+                      <h3 className="font-display text-3xl md:text-4xl font-extrabold mb-1">🌤️ Weather Forecast</h3>
+                      <p className="opacity-80 mb-8">{results.weather.condition}</p>
+
+                      <div className="grid md:grid-cols-2 gap-7 items-center mb-8">
+                        <div className="flex items-center gap-6">
+                          <div className="text-8xl md:text-9xl drop-shadow-2xl animate-float">{results.weather.icon || '☀️'}</div>
+                          <div>
+                            <div className="text-6xl md:text-8xl font-extrabold leading-none">{results.weather.avg}°</div>
+                            <div className="text-sm opacity-80 mt-2 font-medium">Average temperature</div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div className="bg-white/15 backdrop-blur rounded-2xl p-4 border border-white/20">
+                            <div className="opacity-70 text-xs uppercase tracking-wider">High</div>
+                            <div className="text-3xl font-bold mt-1">{results.weather.high}°</div>
+                          </div>
+                          <div className="bg-white/15 backdrop-blur rounded-2xl p-4 border border-white/20">
+                            <div className="opacity-70 text-xs uppercase tracking-wider">Low</div>
+                            <div className="text-3xl font-bold mt-1">{results.weather.low}°</div>
+                          </div>
+                          <div className="bg-white/15 backdrop-blur rounded-2xl p-4 border border-white/20">
+                            <div className="opacity-70 text-xs uppercase tracking-wider">Rain</div>
+                            <div className="text-3xl font-bold mt-1">{results.weather.rain} <span className="text-base font-normal opacity-70">mm</span></div>
+                          </div>
+                          <div className="bg-white/15 backdrop-blur rounded-2xl p-4 border border-white/20">
+                            <div className="opacity-70 text-xs uppercase tracking-wider">Wind</div>
+                            <div className="text-3xl font-bold mt-1">{results.weather.wind} <span className="text-base font-normal opacity-70">km/h</span></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {Array.isArray(results.weather.days) && results.weather.days.length > 0 && (
+                        <div>
+                          <div className="text-xs uppercase tracking-widest opacity-80 font-bold mb-3">Daily Forecast</div>
+                          <div className="flex gap-3 overflow-x-auto pb-2 scroll-x">
+                            {results.weather.days.map((d, i) => (
+                              <div
+                                key={i}
+                                className="flex-shrink-0 bg-white/15 backdrop-blur rounded-2xl p-4 text-center w-24 border border-white/20 hover:bg-white/25 transition-all hover:-translate-y-1 animate-fade-in-up"
+                                style={{ animationDelay: `${0.6 + i * 0.04}s` }}
+                              >
+                                <div className="text-xs opacity-80 font-medium mb-1.5">{d.date?.slice(5)}</div>
+                                <div className="text-3xl mb-1.5">{d.icon || '☀️'}</div>
+                                <div className="text-sm font-bold">{d.high}°<span className="opacity-60 font-normal"> / {d.low}°</span></div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* New search */}
+                <div className="text-center pt-2 pb-8 animate-fade-in" style={{ animationDelay: '0.7s' }}>
+                  <button
+                    onClick={resetForm}
+                    className="btn-shine bg-white text-indigo-600 font-bold py-4 px-10 rounded-xl shadow-lg border-2 border-indigo-100"
+                  >
+                    🔍 Plan Another Trip
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<TravelPlanner />);
+  </script>
+</body>
+</html>

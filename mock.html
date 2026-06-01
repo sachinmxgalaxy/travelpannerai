@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Travel Planner</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.6); }
+    }
+
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.8s ease-out forwards;
+    }
+
+    .animate-scale-in {
+      animation: scaleIn 0.5s ease-out forwards;
+    }
+
+    .animate-slide-in-left {
+      animation: slideInLeft 0.6s ease-out forwards;
+    }
+
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .animate-pulse-glow {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .animate-spin-slow {
+      animation: spin-slow 20s linear infinite;
+    }
+
+    .delay-100 { animation-delay: 0.1s; opacity: 0; }
+    .delay-200 { animation-delay: 0.2s; opacity: 0; }
+    .delay-300 { animation-delay: 0.3s; opacity: 0; }
+    .delay-400 { animation-delay: 0.4s; opacity: 0; }
+    .delay-500 { animation-delay: 0.5s; opacity: 0; }
+    .delay-600 { animation-delay: 0.6s; opacity: 0; }
+
+    .card-hover {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card-hover:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .image-zoom {
+      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .image-zoom:hover {
+      transform: scale(1.1);
+    }
+
+    .btn-shine {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-shine::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+      );
+      transition: left 0.6s;
+    }
+
+    .btn-shine:hover::before {
+      left: 100%;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(-45deg, #eef2ff, #dbeafe, #e0e7ff, #f0f9ff);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 1000px 100%;
+      animation: shimmer 2s infinite linear;
+    }
+
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(99, 102, 241, 0.2);
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin-slow 1s linear infinite;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .input-animated {
+      transition: all 0.3s ease;
+    }
+
+    .input-animated:hover {
+      border-color: #a5b4fc;
+    }
+  </style>
+</head>
+<body class="bg-slate-100">
+
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+function TravelPlanner() {
+  const [location, setLocation] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Use picsum.photos with seeds for consistent themed images
+  const generateMockData = (loc) => {
+    const seed = loc.toLowerCase().replace(/\s/g, '');
+    return {
+      city: loc,
+      heroImage: `https://picsum.photos/seed/${seed}city/1200/500`,
+      intro: `${loc} is a breathtaking destination brimming with rich culture, vibrant cuisine, and unforgettable adventures. From historic landmarks to modern attractions, every corner tells a story waiting to be discovered.`,
+      places: [
+        {
+          name: 'Historic Old Town',
+          type: 'Cultural',
+          rating: 4.8,
+          image: `https://picsum.photos/seed/${seed}old/600/400`,
+          description: 'Wander through cobblestone streets and centuries-old architecture.',
+        },
+        {
+          name: 'Central Park & Gardens',
+          type: 'Nature',
+          rating: 4.7,
+          image: `https://picsum.photos/seed/${seed}park/600/400`,
+          description: 'Lush green oasis perfect for relaxation and morning strolls.',
+        },
+        {
+          name: 'Grand Museum',
+          type: 'Museum',
+          rating: 4.6,
+          image: `https://picsum.photos/seed/${seed}museum/600/400`,
+          description: 'Home to thousands of artifacts spanning centuries of history.',
+        },
+        {
+          name: 'Sunset Viewpoint',
+          type: 'Scenic',
+          rating: 4.9,
+          image: `https://picsum.photos/seed/${seed}sunset/600/400`,
+          description: 'Capture stunning panoramic views at golden hour.',
+        },
+      ],
+      hotels: [
+        {
+          name: 'The Grand Plaza',
+          price: '$280',
+          rating: 4.7,
+          image: `https://picsum.photos/seed/${seed}hotel1/400/300`,
+          features: ['Pool', 'Spa', 'Breakfast'],
+        },
+        {
+          name: 'Boutique Heritage Inn',
+          price: '$145',
+          rating: 4.5,
+          image: `https://picsum.photos/seed/${seed}hotel2/400/300`,
+          features: ['WiFi', 'Bar', 'Garden'],
+        },
+        {
+          name: 'Skyline Towers',
+          price: '$320',
+          rating: 4.8,
+          image: `https://picsum.photos/seed/${seed}hotel3/400/300`,
+          features: ['Gym', 'Rooftop', 'Concierge'],
+        },
+      ],
+      weather: {
+        avg: 22,
+        condition: 'Mostly Sunny',
+        humidity: 65,
+        wind: 12,
+      },
+    };
+  };
+
+  const handleSearch = () => {
+    if (!location || !startDate || !endDate) return;
+    setLoading(true);
+    setResults(null);
+    setTimeout(() => {
+      setResults(generateMockData(location));
+      setLoading(false);
+    }, 1200);
+  };
+
+  return (
+    <div className="min-h-screen gradient-bg p-6">
+      <div className="max-w-5xl mx-auto">
+
+        {/* Header */}
+        <div className="text-center mb-8 animate-fade-in-up">
+          <div className="inline-block animate-float mb-4">
+            <div className="text-6xl">✈️</div>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
+            AI Travel Planner
+          </h1>
+          <p className="text-slate-500 text-lg">
+            Discover your next unforgettable adventure
+          </p>
+        </div>
+
+        {/* Search Form */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-6 md:p-8 mb-8 animate-scale-in border border-white">
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="relative">
+              <label className="block text-xs font-semibold text-slate-500 mb-1 ml-1">DESTINATION</label>
+              <input
+                type="text"
+                placeholder="Where to?"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="input-animated w-full p-3 rounded-xl border-2 border-slate-200 bg-white"
+              />
+            </div>
+            <div className="relative">
+              <label className="block text-xs font-semibold text-slate-500 mb-1 ml-1">CHECK IN</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="input-animated w-full p-3 rounded-xl border-2 border-slate-200 bg-white"
+              />
+            </div>
+            <div className="relative">
+              <label className="block text-xs font-semibold text-slate-500 mb-1 ml-1">CHECK OUT</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="input-animated w-full p-3 rounded-xl border-2 border-slate-200 bg-white"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="btn-shine w-full mt-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-4 rounded-xl shadow-lg transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70"
+          >
+            {loading ? '🔍 Planning Your Trip...' : '✨ Plan My Trip'}
+          </button>
+        </div>
+
+        {/* Loading state */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-16 animate-fade-in">
+            <div className="loader mb-4"></div>
+            <p className="text-slate-600 font-medium">Crafting your perfect itinerary...</p>
+          </div>
+        )}
+
+        {/* Results */}
+        {results && !loading && (
+          <div className="space-y-6">
+
+            {/* Hero Card with Image */}
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl animate-fade-in-up h-72 md:h-96 group">
+              <img
+                src={results.heroImage}
+                alt={results.city}
+                className="w-full h-full object-cover image-zoom"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">📍</span>
+                  <span className="text-sm font-semibold uppercase tracking-wider opacity-90">Your Destination</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl font-bold mb-3 drop-shadow-lg">
+                  {results.city}
+                </h2>
+                <p className="text-white/90 max-w-2xl drop-shadow">
+                  {results.intro}
+                </p>
+              </div>
+            </div>
+
+            {/* Places to Visit */}
+            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl animate-fade-in-up delay-200">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-3xl">🗺️</span>
+                <h3 className="text-2xl md:text-3xl font-bold text-slate-800">
+                  Places to Visit
+                </h3>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-5">
+                {results.places.map((place, i) => (
+                  <div
+                    key={i}
+                    className={`card-hover bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-md cursor-pointer animate-fade-in-up delay-${(i + 1) * 100}`}
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={place.image}
+                        alt={place.name}
+                        className="w-full h-full object-cover image-zoom"
+                      />
+                      <div className="absolute top-3 left-3">
+                        <span className="text-xs font-bold bg-white/95 backdrop-blur text-indigo-700 px-3 py-1.5 rounded-full shadow">
+                          {place.type}
+                        </span>
+                      </div>
+                      <div className="absolute top-3 right-3">
+                        <span className="text-xs font-bold bg-yellow-400 text-yellow-900 px-3 py-1.5 rounded-full shadow flex items-center gap-1">
+                          ⭐ {place.rating}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <h4 className="font-bold text-lg text-slate-800 mb-1">
+                        {place.name}
+                      </h4>
+                      <p className="text-sm text-slate-500">
+                        {place.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Hotels */}
+            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl animate-fade-in-up delay-300">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-3xl">🏨</span>
+                <h3 className="text-2xl md:text-3xl font-bold text-slate-800">
+                  Recommended Hotels
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                {results.hotels.map((hotel, i) => (
+                  <div
+                    key={i}
+                    className={`card-hover flex flex-col md:flex-row gap-4 border border-slate-100 rounded-2xl overflow-hidden shadow-md animate-slide-in-left delay-${(i + 1) * 100}`}
+                  >
+                    <div className="md:w-56 h-48 md:h-auto overflow-hidden flex-shrink-0">
+                      <img
+                        src={hotel.image}
+                        alt={hotel.name}
+                        className="w-full h-full object-cover image-zoom"
+                      />
+                    </div>
+                    <div className="flex-1 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <h4 className="font-bold text-xl text-slate-800 mb-1">
+                          {hotel.name}
+                        </h4>
+                        <div className="flex items-center gap-1 text-sm text-slate-600 mb-3">
+                          ⭐ <span className="font-semibold">{hotel.rating}</span>
+                          <span className="text-slate-400">· Excellent</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {hotel.features.map((f, j) => (
+                            <span key={j} className="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-medium">
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                          {hotel.price}
+                        </div>
+                        <div className="text-xs text-slate-500">per night</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Weather */}
+            <div className="relative bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white rounded-3xl p-6 md:p-8 shadow-2xl overflow-hidden animate-fade-in-up delay-400 animate-pulse-glow">
+              <div className="absolute -top-10 -right-10 text-9xl opacity-20 animate-spin-slow">☀️</div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-3xl">🌤️</span>
+                  <h3 className="text-2xl md:text-3xl font-bold">
+                    Weather Forecast
+                  </h3>
+                </div>
+                <div className="flex flex-col md:flex-row md:items-end gap-6">
+                  <div>
+                    <div className="text-7xl md:text-8xl font-bold drop-shadow-lg">
+                      {results.weather.avg}°
+                    </div>
+                    <p className="text-blue-100 text-lg mt-1">
+                      {results.weather.condition}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 md:ml-auto">
+                    <div className="bg-white/20 backdrop-blur rounded-2xl p-4 text-center">
+                      <div className="text-2xl mb-1">💧</div>
+                      <div className="text-xs opacity-80">Humidity</div>
+                      <div className="text-xl font-bold">{results.weather.humidity}%</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur rounded-2xl p-4 text-center">
+                      <div className="text-2xl mb-1">💨</div>
+                      <div className="text-xs opacity-80">Wind</div>
+                      <div className="text-xl font-bold">{results.weather.wind} km/h</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<TravelPlanner />);
+</script>
+
+</body>
+</html>

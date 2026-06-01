@@ -182,7 +182,7 @@ def call_llm(location: str, start_date: str, end_date: str) -> dict:
 # ----------------------------------------------------------------------
 @app.route("/")
 def index():
-    return send_from_directory(".", "index.html")
+    return send_from_directory(".", "frontend.html")
 
 @app.route("/plan", methods=["POST"])
 def plan():

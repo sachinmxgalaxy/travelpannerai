@@ -1,2 +1,1 @@
-# rageai
-ragebot ai that makes fun of your face
+#Travel AI: The AI That Helps You Plan Your Next Trip
